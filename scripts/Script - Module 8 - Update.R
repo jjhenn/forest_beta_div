@@ -2,159 +2,54 @@
 
 ## today we will review some of the concepts covered in class and conduct variation partitioning
 library(vegan)
-library(tidyr)
+#library(tidyr)
 library(FD)
 library(adespatial)
 library(tidyverse)
 
 ## start with the usual data cleaning
 
+sites = "TRCP"
+
 ## first we will load all of our datasets
 ## 1. species composition data
-dat = read.csv("CAstatewide_Local_Woody_Comdata_20190918.csv")
+comp = read.csv("output/all_dat.csv") %>% 
+  select(quadrat, site, sp, rel_abund) %>% 
+  distinct() %>% 
+  pivot_wider(names_from = sp, values_from = rel_abund, values_fill = 0) %>% 
+  mutate(code = paste(site, quadrat, sep = "")) %>% 
+  filter(site == sites)
 
-## now let's organize and calculate relative abundances
-## make a site by species matrix
-dat2 = spread(dat, Species, Abundance, fill = 0)
+cwm <- read.csv("output/cwm_all.csv") %>% 
+  select(-X, -type, -cover) %>% 
+  pivot_wider(names_from = trait, values_from = cwm) %>% 
+  filter(site == sites)
 
-## fix is to make the row names the site names and remove the offending columns
-row.names(dat2) = dat2$Loc.code
+good_plot <- comp$code
 
-## and lets remove the Site info columns
-abundances = dat2[,6:144]
-head(abundances)
-
-## Because we want to analyze community composition in a relative sense, 
-
-## let’s relativize the data and focus on using Bray-Curtis dissimilarities:
-comp <- decostand(abundances, "total")
-head(comp)
-
-### Again I am removing some plots here to make life easier, we will come back to this later
-comp2=comp
-comp2 = comp2[row.names(comp2) != c("ncwmsse"),]
-comp2 = comp2[row.names(comp2) != c("kltmnns"),]
-comp2 = comp2[row.names(comp2) != c("ncetnse"),]
-comp2 = comp2[row.names(comp2) != c("sccisns"),]
-comp2 = comp2[row.names(comp2) != c("ncrisns"),]
-dim(comp2)
 
 ## 2. environmental data
-env = read.csv("CAstatewide_Enviro_21090918.csv")
-head(env)
+env = read.csv("output/all_env.csv") %>% 
+  mutate(code = paste(site, quadrat, sep = "")) %>% 
+  pivot_wider(names_from = variable, values_from = vals) %>% 
+  distinct() %>% 
+  filter(code %in% good_plot) %>% 
+  filter(site == sites)
+
+
+
 
 ## let's set the row names
-row.names(env) = env$Loc.code
-
-## We are also going to subset our data so that all the plots without soil data are excluded
-env2 = na.omit(env)
-dim(env2)
-summary(env2)
-
-##and subset our env data to match the comp data
-##list of plots in comp data. Since we have our plots as row names, we can just use the row.names function
-env.sites = row.names(comp2)
-length(env.sites)
-
-#sub-setting columns in ENV data frame to only have plots with comp data
-selrow<-(is.element(row.names(env2), as.vector(env.sites)))
-env3 = env2[selrow,]
-dim(env3)
-
-
-## and subset our comp data to match our env data
-comp.sites = row.names(env3)
-length(comp.sites)
-
-comp3 = selrow<-(is.element(row.names(comp2), as.vector(comp.sites)))
-comp3 = comp2[selrow,]
-dim(comp3)
-
-## now that everything is matched, we are going to further subset to start some "real analyses" and compare 
-## drivers of variation among provinces
-
-KLenv = env3[env3$Province == "kl",]
-dim(KLenv)
-NCenv = env3[env3$Province == "nc",]
-dim(NCenv)
-SNenv = env3[env3$Province == "sn",]
-dim(SNenv)
-SCenv = env3[env3$Province == "sc",]
-dim(SCenv)
-
-
-### now we match the composition data
-
-## Kalamath
-KL.sites = row.names(KLenv)
-length(KL.sites)
-KLcomp = selrow<-(is.element(row.names(comp3), as.vector(KL.sites)))
-KLcomp =comp3[selrow,]
-dim(KLcomp)
-## remove species with no plots
-x2<-colSums(KLcomp)
-zero.cols=(!is.element(names(KLcomp), as.vector(names(x2[x2==0]))))
-KLcomp2<-KLcomp[,zero.cols]
-head(KLcomp2)
-dim(KLcomp2)
-
-## nor Cal
-NC.sites = row.names(NCenv)
-length(NC.sites)
-NCcomp = selrow<-(is.element(row.names(comp3), as.vector(NC.sites)))
-NCcomp =comp3[selrow,]
-dim(NCcomp)
-## remove species with no plots
-x2<-colSums(NCcomp)
-zero.cols=(!is.element(names(NCcomp), as.vector(names(x2[x2==0]))))
-NCcomp2<-NCcomp[,zero.cols]
-head(NCcomp2)
-dim(NCcomp2)
-
-## Sierra Nevada
-SN.sites = row.names(SNenv)
-length(SN.sites)
-SNcomp = selrow<-(is.element(row.names(comp3), as.vector(SN.sites)))
-SNcomp =comp3[selrow,]
-dim(SNcomp)
-## remove species with no plots
-x2<-colSums(SNcomp)
-zero.cols=(!is.element(names(SNcomp), as.vector(names(x2[x2==0]))))
-SNcomp2<-SNcomp[,zero.cols]
-head(SNcomp2)
-dim(SNcomp2)
-
-## SoCal
-SC.sites = row.names(SCenv)
-length(SC.sites)
-SCcomp = selrow<-(is.element(row.names(comp3), as.vector(SC.sites)))
-SCcomp =comp3[selrow,]
-dim(SCcomp)
-## remove species with no plots
-x2<-colSums(SCcomp)
-zero.cols=(!is.element(names(SCcomp), as.vector(names(x2[x2==0]))))
-SCcomp2<-SCcomp[,zero.cols]
-head(SCcomp2)
-dim(SCcomp2)
-
+row.names(env) = env$code
 
 ##let's start with a simple analysis of comparing spatial and environmental drivers in two provinces
 ## we will start with NC and SN
 
-##First we want to check our sample size
-dim(SNcomp2)
-## 99 plots in SN
-dim(NCcomp2)
-## 75 plots in NC
-
-## these give us a fair amount of power to test things and probably don't warrant much data reductions
-## but we will do some later
-
 ## lets start with SN and isolate the spatial data
-gx1 = SNenv$x
-gy1 = SNenv$y
+gx1 = env$gx
+gy1 = env$gy
 SPdata1 = data.frame(gx1,gy1)
-row.names(SPdata1) = row.names(SNenv)
+row.names(SPdata1) = row.names(env)
 head(SPdata1)
 dim(SPdata1)
 
@@ -170,11 +65,12 @@ summary(SNmem)
 
 
 ################isolate soil variables
-SN_soils = SNenv[,24:36]
+SN_soils = env[,6:25]
 head(SN_soils)
 ######################  calculate dissimilarity ##############
 ## on taxonomic diversity
-SN_dis <- vegdist(SNcomp2, method="bray")
+SN_dis <- vegdist(comp %>% select(-quadrat, -site, -code), method="bray")
+SN_dis <- dist(cwm$lipids)
 
 ## merge predictor variables into a single dataframe
 SNpred = cbind(SNmem, SN_soils)
@@ -183,12 +79,12 @@ dim(SNpred)
 
 
 ## run the analysis on all variables prior to forward selection
-a <- names(SNpred)
+a <- names(SN_soils)
 formula1 <- as.formula(paste("SN_dis ~ ", paste(a, collapse= "+")))
 formula1
 
 ##  run a dbRDA on each data set
-SNmodel1 <- dbrda(formula1, SNpred)
+SNmodel1 <- dbrda(formula1, SNpred, add = T)
 
 ## check the model
 SNmodel1
@@ -224,7 +120,9 @@ SN_pca
 SN_pc1 = scores(SN_pca, choices = 1)
 SN_pc2 = scores(SN_pca, choices = 2)
 SN_pc3 = scores(SN_pca, choices = 3)
-SN_PCscores = cbind(SN_pc1,SN_pc2,SN_pc3)
+SN_pc4 = scores(SN_pca, choices = 4)
+SN_pc5 = scores(SN_pca, choices = 5)
+SN_PCscores = cbind(SN_pc1,SN_pc2,SN_pc3, SN_pc4, SN_pc5)
 
 ## re-merge our predictors
 SNpred1 = cbind(SNmem, SN_PCscores)
@@ -274,7 +172,7 @@ anova.cca(SNmodel2, alpha=0.05, beta=0.01, step=100, perm.max=99)
 #(as described in the help page for function "capscale").
 SNmodel3 <- capscale(SN_dis~ 1)
 attributes(SNmodel3$CA)
-SNmodel3_sc= scores(SNmodel3, choices = c(1:8), display = c("wa"), scaling =1)
+SNmodel3_sc= scores(SNmodel3, choices = c(1), display = c("wa"), scaling =1)
 formula1.rda2T <- as.formula(paste("SNmodel3_sc ~ ", paste(a1, collapse= "+")))
 formula1.rda2T
 RDA_mode2T <- rda(formula1.rda2T, SNpred1)
@@ -290,10 +188,10 @@ anova.cca(RDA_mode2T, alpha=0.05, beta=0.01, step=100, perm.max=999)
 RsquareAdj(RDA_mode2T)
 
 ## run forward selection model to get significant variables
-For_Modev = forward.sel(SNmodel3_sc, SN_PCscores, R2thresh=0.4798952, adjR2thresh=0.3784114)
+For_Modev = forward.sel(SNmodel3_sc, SN_PCscores, R2thresh=0.8855448, adjR2thresh=0.7767001)
 For_Modev
 
-For_Modsp = forward.sel(SNmodel3_sc,SNmem, R2thresh=0.4798952, adjR2thresh=0.3784114)
+For_Modsp = forward.sel(SNmodel3_sc,SNmem, R2thresh=0.8855448, adjR2thresh=0.7767001)
 For_Modsp
 
 
@@ -308,10 +206,10 @@ PCO_model <- capscale(SN_dis ~ 1)
 
 # create two formulas, one for environment ("d") and  one for space ("e")
 # in c()below enter the columns corresponding to the env factor that are sig in the forward sel model
-d<-c(paste("SN_PCscores[,", c(1,2), "]", sep=""))
+d<-c(paste("SN_PCscores[,", c(3,1,2), "]", sep=""))
 
 # for this model include significant spatial columns
-e<-c(paste("SNmem[,", c(1,3,4,12,8,6,10,2,13,5), "]", sep=""))
+e<-c(paste("SNmem[,", c(17,6,3,14,44,20,22,16,1,7,19,2), "]", sep=""))
 
 ## put it all together
 formula.environment <- as.formula(paste("SNmodel3_sc ~", paste(d, collapse= "+")))
