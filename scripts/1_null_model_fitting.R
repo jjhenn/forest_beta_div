@@ -66,7 +66,9 @@ for(i in c("morph", "meta")){
       replace(is.na(.), 0) %>% 
       select(order(colnames(.)))
     
-    row.names(trt_SERC) = names(mat_SERC)
+    trt_SERC <- as.data.frame(trt_SERC)
+    
+    rownames(trt_SERC) = names(mat_SERC)
     
     mat2_SERC=as.matrix(mat_SERC)
     ###Calculate Null CWM trait values for each plot####
@@ -78,6 +80,8 @@ for(i in c("morph", "meta")){
     mat_TRCP=data.frame(comm_TRCP$perm) %>% 
       replace(is.na(.), 0) %>% 
       select(order(colnames(.)))
+    
+    trt_TRCP <- as.data.frame(trt_TRCP)
     
     row.names(trt_TRCP) = names(mat_TRCP)
     
@@ -91,6 +95,8 @@ for(i in c("morph", "meta")){
     mat_WFDP=data.frame(comm_WFDP$perm) %>% 
       replace(is.na(.), 0) %>% 
       select(order(colnames(.)))
+    
+    trt_WFDP <- as.data.frame(trt_WFDP)
     
     row.names(trt_WFDP) = names(mat_WFDP)
     
@@ -157,6 +163,8 @@ for(i in c("morph", "meta")){
     replace(is.na(.), 0) %>% 
     select(order(colnames(.)))
   
+  trt_SERC <- as.data.frame(trt_SERC)
+  
   row.names(trt_SERC) = names(mat_SERC)
   
   mat2_SERC=as.matrix(mat_SERC)
@@ -170,6 +178,8 @@ for(i in c("morph", "meta")){
     replace(is.na(.), 0) %>% 
     select(order(colnames(.)))
   
+  trt_TRCP <- as.data.frame(trt_TRCP)
+  
   row.names(trt_TRCP) = names(mat_TRCP)
   
   mat2_TRCP=as.matrix(mat_TRCP)
@@ -182,6 +192,8 @@ for(i in c("morph", "meta")){
   mat_WFDP=data.frame(comm_WFDP) %>% 
     replace(is.na(.), 0) %>% 
     select(order(colnames(.)))
+  
+  trt_WFDP <- as.data.frame(trt_WFDP)
   
   row.names(trt_WFDP) = names(mat_WFDP)
   
@@ -394,7 +406,7 @@ write.csv(slopes_PC, file = "output/overall_slopes.csv", row.names = F)
 
 
 #### create trait-specific FDis results ####
-# all_traits <- read.csv("output/all_traits.csv")
+all_traits <- read.csv("output/all_traits.csv")
 
 out2 <- data.frame(NULL)
 trait <- unique(all_traits$trait)
