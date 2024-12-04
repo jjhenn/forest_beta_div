@@ -8,6 +8,12 @@ library(readxl)
 ## load species compositon data
 all_comp <- read.csv("output/all_comp.csv") 
 
+n_sp_quad <- all_comp %>% 
+  group_by(site, quadrat) %>% 
+  summarize(count = n()) %>% 
+  group_by(site) %>% 
+  summarize(mean_n = mean(count), sd_n = sd(count))
+
 all_traits <- read.csv("output/all_traits.csv") %>% 
   filter(trait != "Alcohols and polyols",
          trait != "Carbonyl compounds")
@@ -302,6 +308,7 @@ fdis_pc_dat %>% filter(fdis_dev < 10) %>%
 #### test for spatial autocorrelation in models ####
 
 library(spdep)
+library(sp)
 points <- read.csv("output/all_env.csv") %>% 
   filter(variable %in% c("gx", "gy")) %>% 
   pivot_wider(names_from = variable, values_from = vals)

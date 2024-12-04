@@ -73,7 +73,8 @@ serc <- ggplot() +
   ggrepel::geom_text_repel(data=serc_loadings, aes(x=PC1*10, y=PC2*10, label=env), size = 3) +
   theme_classic() +
   theme(legend.position = "top",
-        legend.title = element_blank()) +
+        legend.title = element_blank(),
+        text = element_text(size = 12)) +
   scale_color_manual(values = "darkslategray3") +
   xlab(paste("PC1 (", round(summary(serc_pca)$importance[2]*100, 1), "%", ")", sep = "")) +
   ylab(paste("PC2 (", round(summary(serc_pca)$importance[5]*100, 1), "%", ")", sep = ""))
@@ -86,7 +87,8 @@ trcp <- ggplot() +
   ggrepel::geom_text_repel(data=TRCP_loadings, aes(x=PC1*10, y=PC2*10, label=env), size =3) +
   theme_classic() +
   theme(legend.position = "top",
-        legend.title = element_blank()) +
+        legend.title = element_blank(),
+        text = element_text(size = 12)) +
   scale_color_manual(values = "brown2") +
   xlab(paste("PC1 (", round(summary(TRCP_pca)$importance[2]*100, 1), "%", ")", sep = "")) +
   ylab(paste("PC2 (", round(summary(TRCP_pca)$importance[5]*100, 1), "%", ")", sep = ""))
@@ -99,17 +101,18 @@ wfdp <- ggplot() +
   ggrepel::geom_text_repel(data=WFDP_loadings, aes(x=PC1*10, y=PC2*10, label=env), size = 3) +
   theme_classic() +
   theme(legend.position = "top",
-        legend.title = element_blank()) +
+        legend.title = element_blank(),
+        text = element_text(size = 12)) +
   scale_color_manual(values = "gold2") +
   xlab(paste("PC1 (", round(summary(WFDP_pca)$importance[2]*100, 1), "%", ")", sep = "")) +
   ylab(paste("PC2 (", round(summary(WFDP_pca)$importance[5]*100, 1), "%", ")", sep = "")) 
 
-env_pca_plot <- ggpubr::ggarrange(serc, trcp, wfdp, ncol = 3, common.legend = F)
+env_pca_plot <- ggpubr::ggarrange(serc, trcp, wfdp, nrow = 3, common.legend = F)
 
 jpeg(file = "output/env_pca_plot.jpeg",
-     width = 12,
-     height = 4,
+     width = 3.5,
+     height = 9,
      unit = "in",
-     res = 400)
+     res = 600)
 env_pca_plot
 dev.off()

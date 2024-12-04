@@ -37,9 +37,33 @@ jpeg(file = "output/trait_pca.jpeg",
 pca_plot
 dev.off()
 
+pca_plot2 <- ggplot() +
+  geom_hline(aes(yintercept = 0)) +
+  geom_vline(aes(xintercept = 0)) +
+  geom_point(aes(x = PC1, y = PC2, fill = site, size = abu), data = sp_pca_points, pch = 21) +
+  #geom_segment(aes(x = 0, y = 0, xend = PC1*6, yend = PC2*6), data = sp_pca_vecs, arrow=arrow(length=unit(0.25,"cm"))) +
+  ggrepel::geom_text_repel(data=sp_pca_points %>% mutate(sp = gsub("_", " ", sp)),  min.segment.length = 0, aes(x=PC1, y=PC2, label=sp), size = 3, show.legend = F, max.overlaps = 10) +
+  theme_classic() +
+  scale_color_manual(values = c("black", "navy")) +
+  scale_fill_manual(values = c("darkslategray3", "brown2", "gold2")) +
+  theme(legend.title = element_blank(),
+        text= element_text(size = 12),
+        legend.position = "none") +
+  xlab(paste("Trait PC1 (", round(summary(sp_pca)$importance[2]*100, 1), "%", ")", sep = "")) +
+  ylab(paste("Trait PC2 (", round(summary(sp_pca)$importance[5]*100, 1), "%", ")", sep = ""))
+
+pca_plot_comb <- ggpubr::ggarrange(pca_plot, pca_plot2, ncol = 1, labels = c("A", "B"))
+
+jpeg(file = "output/trait_pca_comb.jpeg",
+      width = 6.5,
+      height = 10,
+      unit= "in",
+      res = 600)
+pca_plot_comb
+dev.off()
 
 
-#### make trait group ses plots ####
+### make trait group ses plots ####
 fdis_ses <- read.csv("output/all_null_fdis.csv")%>% 
   mutate(site = plyr::mapvalues(site, from = c("SERC", "TRCP", "WFDP"), to = c("SERC", "TRCP", "WFDP"))) %>% 
   mutate(type = plyr::mapvalues(type, from = c("morph", "meta"), to = c("Morphological", "Metabolomic")))
@@ -65,6 +89,18 @@ trait_ses <- fdis_ses %>%
 #   select(type, site, estimate, p.value) %>% 
 #   filter(p.value < 0.05) %>% 
 #   select(-estimate)
+
+trait_ses %>% 
+  ggplot(aes(x = site, y = dis, fill = site)) +
+  geom_boxplot() +
+  facet_wrap(~type, scales = "free") + 
+  theme_classic() +
+  scale_fill_manual(values = c("darkslategray3", "brown2", "gold2")) +
+  theme(legend.title = element_blank(),
+                                              text= element_text(size = 12),
+                                              legend.position = "none") +
+  xlab("Site") +
+  ylab("FDis")
 
 slopes_trait_PC1 <- read.csv("output/overall_slopes.csv") %>% 
   filter(p.value < 0.05) %>% 
@@ -92,9 +128,9 @@ all_fdis_pc1 <- trait_ses %>% filter(fdis_dev < 10) %>%
   geom_hline(aes(yintercept = 0)) +
   geom_point(size = 2, aes(color = site)) +
   stat_smooth(color = "black", method = "lm", data = slopes_trait_PC1 %>% left_join(trait_ses) %>% filter(fdis_dev < 10) ) +
-  geom_text(aes(x = -Inf, y = Inf, label = text, hjust = 0, vjust = 1.1), data = sig_text, size = 3) +
-  geom_hline(aes(yintercept = 1.96), color = "lightgray", linetype = "dashed") +
-  geom_hline(aes(yintercept = -1.96), color = "lightgray", linetype = "dashed") +
+  #geom_text(aes(x = -Inf, y = Inf, label = text, hjust = 0, vjust = 1.1), data = sig_text, size = 3) +
+  geom_hline(aes(yintercept = 1.96), color = "black", linetype = "dashed") +
+  geom_hline(aes(yintercept = -1.96), color = "black", linetype = "dashed") +
   facet_grid(type~site, scales = "free") +
   #scale_fill_manual(values = c("white", NULL)) +
   theme_classic() +
@@ -107,10 +143,10 @@ all_fdis_pc1 <- trait_ses %>% filter(fdis_dev < 10) %>%
 
 
 jpeg(file = "output/all_fdis_pc1.jpeg",
-    width = 12,
-    height = 7,
+    width = 7,
+    height = 5,
     unit = "in",
-    res = 400)
+    res = 600)
 all_fdis_pc1
 dev.off()
 
@@ -128,6 +164,8 @@ all_fdis_pc2 <- trait_ses %>% filter(fdis_dev < 10) %>%
   geom_hline(aes(yintercept = 0)) +
   geom_point(size = 2, aes(color = site)) +
   stat_smooth(color = "black", method = "lm", data = slopes_trait_PC2 %>% left_join(trait_ses) %>% filter(fdis_dev < 10) ) +
+  geom_hline(aes(yintercept = 1.96), color = "black", linetype = "dashed") +
+  geom_hline(aes(yintercept = -1.96), color = "black", linetype = "dashed") +
   #geom_text(aes(x = -Inf, y = Inf, label = text, hjust = 0, vjust = 1.1), data = sig_text, size = 3) +
   facet_grid(type~site, scales = "free") +
   #scale_fill_manual(values = c("white", NULL)) +
@@ -141,10 +179,10 @@ all_fdis_pc2 <- trait_ses %>% filter(fdis_dev < 10) %>%
 
 
 jpeg(file = "output/all_fdis_pc2.jpeg",
-     width = 12,
-     height = 7,
+     width = 7,
+     height = 5,
      unit = "in",
-     res = 400)
+     res = 600)
 all_fdis_pc2
 dev.off()
 
